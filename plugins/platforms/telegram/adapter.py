@@ -187,7 +187,7 @@ from plugins.platforms.telegram.telegram_resolved_prompt import edit_keeping_pro
 from plugins.platforms.telegram.telegram_topic_transfer import TopicTransferFn, apply_root_dm_topic_transfer
 from plugins.platforms.telegram.telegram_network import (
     SEED_FALLBACK_IPS, TelegramFallbackTransport, discover_fallback_ips, parse_fallback_ip_env, tcp_keepalive_socket_options)
-from plugins.platforms.telegram.telegram_picker_labels import model_button_label, shared_label_prefix
+from plugins.platforms.telegram.telegram_picker_labels import model_button_labels
 from plugins.platforms.telegram.telegram_topic_routing import TelegramTopicRoutingMixin
 from utils import env_float, env_int
 
@@ -4457,9 +4457,8 @@ class TelegramAdapter(TelegramHeldInboundMixin, TelegramTopicRoutingMixin, BaseP
         carries the plan word (``model-b · Large``) from the provider row; other accounts are unchanged."""
         from hermes_cli.model_picker_usage import picker_row_suffix
         page_models, page_meta = self._format_choice_page(models, page, self._MODEL_PAGE_SIZE)
-        prefix = shared_label_prefix([str(m) for m in models])
-        buttons = [InlineKeyboardButton(model_button_label(model_id, prefix, picker_row_suffix(provider, model_id)),
-                                        callback_data=f"mm:{page_meta['start'] + i}") for i, model_id in enumerate(page_models)]
+        labels = model_button_labels([str(m) for m in models], lambda m: picker_row_suffix(provider, m))
+        buttons = [InlineKeyboardButton(labels[page_meta["start"] + i], callback_data=f"mm:{page_meta['start'] + i}") for i in range(len(page_models))]
         return self._paged_keyboard(buttons, page_meta, "mg", self._picker_back_cancel_row(), columns=1)
 
     async def _picker_edit(self, query, text_md: str, keyboard) -> None:
